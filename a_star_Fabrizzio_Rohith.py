@@ -3,68 +3,88 @@ from heapq import heappush, heappop
 import cv2
 import numpy as np
 from copy import deepcopy
+# import math
+from math import cos, sin, radians, sqrt
 
-# https://github.com/f-coronado/ENPM-661-Project-2
+# https://github.com/f-coronado/ENPM-661-Project-3
 
 startTime = time.time()
 
 ################################ Step One #########################################
 
-# node = (C2C, node index, parent node index, (x, y)) .. type is tuple
-def moveRight(node):
-    x, y = node[3]
-    newX = x + 1
-    cost = round(1, 1)
-    newNode = (cost, node[1], node[2], (newX, y)) # only update location after performing move
+def moveDown60Degrees(node, L, goalNode): # these functions do not update the node indexes, only the C2C, (x, y, theta), C2G and totalCost
+    x, y, theta = node[3]
+    newX = round(x + L * cos(radians(theta - 60)), 2) # cos function takes angles in radians so we convert and also round that calculation to 2 decimals
+    newY = round(y + L * sin(radians(theta - 60)), 2)
+    newTheta = theta - 60
+    actionCost = L # professor says all actionCosts are the step size chosen
+    xGoal, yGoal, thetaGoal = goalNode[3]
+    Cost2Goal = round(sqrt( (newX - xGoal)**2 + (newY - yGoal)**2 ), 2) # Consider Euclidean distance as a heuristic function, so in this step, this is the distance from this new node to the goal node
+    
+    # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+    newNode = (node[0] + actionCost, node[1], node[2], (newX, newY, newTheta), Cost2Goal, round(node[0] + actionCost + Cost2Goal, 2) )
+    # double check C2C, C2G, totalCost
+    # print("newNode: ", newNode)
     return newNode
 
-def moveLeft(node):
-    x, y = node[3]
-    newX = x - 1
-    cost = round(1, 1)
-    newNode = (cost, node[1], node[2], (newX, y))
+def moveDown30Degrees(node, L, goalNode): # these functions do not update the node indexes, only the C2C, (x, y, theta), C2G and totalCost
+    x, y, theta = node[3]
+    newX = round(x + L * cos(radians(theta - 30)), 2) # cos function takes angles in radians so we convert and also round that calculation to 2 decimals
+    newY = round(y + L * sin(radians(theta - 30)), 2)
+    newTheta = theta - 30
+    actionCost = L # professor says all actionCosts are the step size chosen
+    xGoal, yGoal, thetaGoal = goalNode[3]
+    Cost2Goal = round(sqrt( (newX - xGoal)**2 + (newY - yGoal)**2 ), 2) # Consider Euclidean distance as a heuristic function, so in this step, this is the distance from this new node to the goal node
+    
+    # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+    newNode = (node[0] + actionCost, node[1], node[2], (newX, newY, newTheta), Cost2Goal, round(node[0] + actionCost + Cost2Goal, 2) )
+    # double check C2C, C2G, totalCost
+    # print("newNode: ", newNode)
     return newNode
 
-def moveUp(node):
-    x, y = node[3]
-    newY = y + 1
-    cost = round(1, 1)
-    newNode = (cost, node[1], node[2], (x, newY))
+def move0Degrees(node, L, goalNode): # these functions do not update the node indexes, only the C2C, (x, y, theta), C2G and totalCost
+    x, y, theta = node[3]
+    newX = round(x + L * cos(radians(theta)), 2) # cos function takes angles in radians so we convert and also round that calculation to 2 decimals
+    newY = round(y + L * sin(radians(theta)), 2)
+    newTheta = theta
+    actionCost = L # professor says all actionCosts are the step size chosen
+    xGoal, yGoal, thetaGoal = goalNode[3]
+    Cost2Goal = round(sqrt( (newX - xGoal)**2 + (newY - yGoal)**2 ), 2) # Consider Euclidean distance as a heuristic function, so in this step, this is the distance from this new node to the goal node
+    
+    # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+    newNode = (node[0] + actionCost, node[1], node[2], (newX, newY, newTheta), Cost2Goal, round(node[0] + actionCost + Cost2Goal, 2) )
+    # double check C2C, C2G, totalCost
+    # print("newNode: ", newNode)
     return newNode
 
-def moveDown(node):
-    x, y = node[3]
-    newY = y - 1
-    cost = round(1, 1)
-    newNode = (cost, node[1], node[2], (x, newY))
+def moveUp30Degrees(node, L, goalNode): # these functions do not update the node indexes, only the C2C, (x, y, theta), C2G and totalCost
+    x, y, theta = node[3]
+    newX = round(x + L * cos(radians(theta + 30)), 2) # cos function takes angles in radians so we convert and also round that calculation to 2 decimals
+    newY = round(y + L * sin(radians(theta + 30)), 2)
+    newTheta = theta + 30
+    actionCost = L # professor says all actionCosts are the step size chosen
+    xGoal, yGoal, thetaGoal = goalNode[3]
+    Cost2Goal = round(sqrt( (newX - xGoal)**2 + (newY - yGoal)**2 ), 2) # Consider Euclidean distance as a heuristic function, so in this step, this is the distance from this new node to the goal node
+    
+    # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+    newNode = (node[0] + actionCost, node[1], node[2], (newX, newY, newTheta), Cost2Goal, round(node[0] + actionCost + Cost2Goal, 2) )
+    # double check C2C, C2G, totalCost
+    # print("newNode: ", newNode)
     return newNode
 
-def moveUpRight(node):
-    x, y = node[3]
-    newX, newY = x + 1, y + 1
-    cost = round(1.4,1)
-    newNode = (cost, node[1], node[2], (newX, newY))
-    return newNode
-
-def moveUpLeft(node):
-    x, y = node[3]
-    newX, newY = x - 1, y + 1
-    cost = round(1.4,1)
-    newNode = (cost, node[1], node[2], (newX, newY))
-    return newNode
-
-def moveDownRight(node):
-    x, y = node[3]
-    newX, newY = x + 1, y - 1
-    cost = round(1.4,1)
-    newNode = (cost, node[1], node[2], (newX, newY))
-    return newNode
-
-def moveDownLeft(node):
-    x, y = node[3]
-    newX, newY = x - 1, y - 1
-    cost = round(1.4,1)
-    newNode = (cost, node[1], node[2], (newX, newY))
+def moveUp60Degrees(node, L, goalNode): # these functions do not update the node indexes, only the C2C, (x, y, theta), C2G and totalCost
+    x, y, theta = node[3]
+    newX = round(x + L * cos(radians(theta + 60)), 2) # cos function takes angles in radians so we convert and also round that calculation to 2 decimals
+    newY = round(y + L * sin(radians(theta + 60)), 2)
+    newTheta = theta + 60
+    actionCost = L # professor says all actionCosts are the step size chosen
+    xGoal, yGoal, thetaGoal = goalNode[3]
+    Cost2Goal = round(sqrt( (newX - xGoal)**2 + (newY - yGoal)**2 ), 2) # Consider Euclidean distance as a heuristic function, so in this step, this is the distance from this new node to the goal node
+    
+    # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+    newNode = (node[0] + actionCost, node[1], node[2], (newX, newY, newTheta), Cost2Goal, round(node[0] + actionCost + Cost2Goal, 2) )
+    # double check C2C, C2G, totalCost
+    # print("newNode: ", newNode)
     return newNode
 
 ################################ Step One #########################################
@@ -160,50 +180,35 @@ def checkObstacleSpace(node):
 
 ############################### Step Three ########################################
 
-def findChildren(node):
+def findChildren(node, L, goalNode):
 
     node1 = deepcopy(node)
     node2 = deepcopy(node)
     node3 = deepcopy(node)
     node4 = deepcopy(node)
     node5 = deepcopy(node)
-    node6 = deepcopy(node)
-    node7 = deepcopy(node)
-    node8 = deepcopy(node)
 
     children = []
 
-    newNodeUp = moveUp(node1)
+    newNodeDown60 = moveDown60Degrees(node1, L, goalNode)
     # heappush(children, newNodeUp)
-    children.append(newNodeUp)
+    children.append(newNodeDown60)
 
-    newNodeUpRight = moveUpRight(node2)
+    newNodeDown30 = moveDown30Degrees(node2, L, goalNode)
     # heappush(children,newNodeUpRight)
-    children.append(newNodeUpRight)
+    children.append(newNodeDown30)
 
-    newNodeRight = moveRight(node7)
+    newNode0 = move0Degrees(node3, L, goalNode)
     # heappush(children,newNodeRight)
-    children.append(newNodeRight)
+    children.append(newNode0)
 
-    newNodeDownRight = moveDownRight(node5)
+    newNodeUp30 = moveUp30Degrees(node4, L, goalNode)
     # heappush(children,newNodeDownRight)
-    children.append(newNodeDownRight)
+    children.append(newNodeUp30)
 
-    newNodeDown = moveDown(node4)
+    newNodeUp60 = moveUp60Degrees(node5, L, goalNode)
     # heappush(children,newNodeDown)
-    children.append(newNodeDown)
-
-    newNodeDownLeft = moveDownLeft(node6)
-    # heappush(children,newNodeDownLeft)
-    children.append(newNodeDownLeft)
-
-    newNodeLeft = moveLeft(node8)
-    # heappush(children,newNodeLeft)
-    children.append(newNodeLeft)
-
-    newNodeUpLeft = moveUpLeft(node3)
-    # heappush(children,newNodeUpLeft)
-    children.append(newNodeUpLeft)
+    children.append(newNodeUp60)
 
     return children
 
@@ -212,7 +217,7 @@ def goalNodeReached(node, goalNode):
         return True
     return False
 
-def dijkstra(startNode, goalNode):
+def aStar(startNode, goalNode):
 
     openList = []
     heappush(openList, startNode)
@@ -256,7 +261,7 @@ def dijkstra(startNode, goalNode):
                         # print("currentNode: ", currentNode)
                         childC2C = round(currentNode[0] + c[0], 1) # sum the popped node and add the child step cost
                         nodeIndex = len(openList) + len(closedList) # index of this child node is the sum of all elements in openList and closedList
-                        # node = (C2C, node index, parent node index, (x, y)) .. type is tuple
+                        # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
                         childNode = (childC2C, nodeIndex, currentNode[1], c[3]) # construct the childNode tuple
                         heappush(openList, childNode) # place appropriately into heap
 
@@ -312,8 +317,8 @@ def generateVideo(path, canvas, openList, ClosedList):
         nodesExplored.append(nodes[3])
 
     size = (600, 250)
-    # result = cv2.VideoWriter('dijkstraSearch.mp4', cv2.VideoWriter_fourcc(codec), FPS, (width, height))
-    videoWriter = cv2.VideoWriter('dijkstraSearch.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 200, size)
+    # result = cv2.VideoWriter('aStarSearch.mp4', cv2.VideoWriter_fourcc(codec), FPS, (width, height))
+    videoWriter = cv2.VideoWriter('aStarSearch.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 200, size)
 
     for i, (x, y) in enumerate(nodesExplored): 
         currentCanvas = canvas.copy()
@@ -323,7 +328,7 @@ def generateVideo(path, canvas, openList, ClosedList):
 
     for location in myList:
         cv2.circle(canvas, center = location, radius = radius, color = (0, 255, 0), thickness = 1) # plot the path taken all at once
-    # videoWriter = cv2.VideoWriter('dijkstraSearch.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 50, size)
+    # videoWriter = cv2.VideoWriter('aStarSearch.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 50, size)
 
     for i, (x, y) in enumerate(myList):
         # time.sleep(.05)
@@ -336,29 +341,54 @@ def generateVideo(path, canvas, openList, ClosedList):
     cv2.destroyAllWindows()
 
 ############################### Step Five #########################################
+# node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
 
-startNode = (0, 0, None, (300, 125)) # initializing startNode in obstacle space so we enter the loop
-while checkObstacleSpace(startNode) == "In Obstacle Space":
-    xStart = int(input("enter the x coord of the start node: "))
-    yStart = int(input("enter the y coord of the start node: "))
-    yStart = 250 - yStart
+# startNode = (0, 0, None, (300, 125), 0, 0) # initializing startNode in obstacle space so we enter the loop
+# while checkObstacleSpace(startNode) == "In Obstacle Space":
+#     xStart = int(input("enter the x coord of the start node: "))
+#     yStart = int(input("enter the y coord of the start node: "))
+#     startOrientation = input("enter the orientation of the robot at the start node in degrees: ")
+#     yStart = 250 - yStart
 
-    # node = (C2C, node index, parent node index, (x, y)) .. type is tuple
-    startNode = (0, 0, None, (xStart, yStart))
-    if checkObstacleSpace(startNode) == "In Obstacle Space":
-        print("\nIn Obstacle space, please try again...")
+#     # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+#     startNode = (0, 0, None, (xStart, yStart), 0, 0)
+#     if checkObstacleSpace(startNode) == "In Obstacle Space":
+#         print("\nIn Obstacle space, please try again...")
 
-goalNode = (None, 0, None, (500, 125)) # initializing goalNode in obstacle space so we enter the loop
-while checkObstacleSpace(goalNode) == "In Obstacle Space":
-    xGoal = int(input("\nenter the x coord of the goal node: "))
-    yGoal = int(input("enter the y coord of the goal node: "))
-    yGoal = 250 - yGoal
-    goalNode = (None, None, None, (xGoal, yGoal))
-    if checkObstacleSpace(goalNode) == "In Obstacle Space":
-        print("\nIn Obstacle space, please try again...")
+# goalNode = (None, 0, None, (500, 125), 0, 0) # initializing goalNode in obstacle space so we enter the loop
+# while checkObstacleSpace(goalNode) == "In Obstacle Space":
+#     xGoal = int(input("\nenter the x coord of the goal node: "))
+#     yGoal = int(input("enter the y coord of the goal node: "))
+#     yGoal = 250 - yGoal # accounting for flip in graph bc opencv origin is at top left
+#     goalOrientation = input("enter the orientation of the robot at the goal node in degrees: ")
 
-# startNode = (0, 0, None, (454, 125))
+#     goalNode = (None, None, None, (xGoal, yGoal), 0, 0)
+#     if checkObstacleSpace(goalNode) == "In Obstacle Space":
+#         print("\nIn Obstacle space, please try again...")
+
+# L = 100 # initializing step size to 100 so we enter the loop
+# while L > 10 or L < 1:
+#     L = int(input("enter the step size: "))
+#     if L > 10 or L < 1:
+#         print("please enter a valid step size 1 <= L <= 10")
+
+# radius = int(input("enter the radius of the robot: "))
+# clearance = int(input("enter the clearance desired: "))
+
+# node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
+startNode = (0, 0, None, (10, 10, 0), 0, 0)
+L = 10
+goalNode = (0, 0, None, (110, 110, 0), 0, 0)
+print("node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost)")
+print("startNode: ", startNode)
+# moveDown60Degrees(startNode, L, goalNode)
+# moveDown30Degrees(startNode, L, goalNode)
+# move0Degrees(startNode, L, goalNode)
+# moveUp30Degrees(startNode, L, goalNode)
+# moveUp60Degrees(startNode, L, goalNode)
 # print(checkObstacleSpace(startNode))
+# print(findChildren(startNode, L, goalNode))
+# print(goalNodeReached(startNode, goalNode))
 
 # startNode = (0, 0, None, (7, 7))
 # print("Node format: (C2C, Node index, parent index, (x,y)) \nstartNode: ", startNode)
@@ -366,7 +396,7 @@ while checkObstacleSpace(goalNode) == "In Obstacle Space":
 # goalNode = (0, 0, None, (170, 125))
 # # goalNode = (0, 0, None, (520, 125))
 
-result = dijkstra(startNode, goalNode)
+# result = aStar(startNode, goalNode)
 
 endTime = time.time()
 print("\nrun time = ", endTime - startTime, "seconds")
