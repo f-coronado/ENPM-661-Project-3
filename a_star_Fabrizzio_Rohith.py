@@ -358,6 +358,9 @@ def generateVideo(path, canvas, openList, ClosedList):
     cv2.destroyAllWindows()
 
 ############################### Step Five #########################################
+
+####################### User Input / Implementation ###############################
+
 # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
 
 # startNode = (0, 0, None, (300, 125), 0, 0) # initializing startNode in obstacle space so we enter the loop
@@ -391,6 +394,9 @@ def generateVideo(path, canvas, openList, ClosedList):
 
 # radius = int(input("enter the radius of the robot: "))
 # clearance = int(input("enter the clearance desired: "))
+
+####################### User Input / Implementation ###############################
+
 
 # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
 startNode = (0, 0, None, (10, 10, 0), 0, 0)
