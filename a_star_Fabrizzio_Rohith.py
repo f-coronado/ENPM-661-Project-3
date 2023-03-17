@@ -121,8 +121,9 @@ cv2.fillPoly(canvas, [triangle], red)
 
 def checkObstacleSpace(node):
 
-    x = node[3][0]
-    y = node[3][1] 
+    # need to round bc canvas array only contains integers but x and y are floats
+    x = round(node[3][0])
+    y = round(node[3][1])
 
     # # hexagon equations
     # # assigned the values so they didnt have to be calculated everytime but i left my calculations commented
@@ -172,6 +173,7 @@ def checkObstacleSpace(node):
     # return "Not in obstacle space"
 
     # was using functions to calculate if node is in obstacle space but checking the pixel color is more efficient
+    # print(y,"y is of tpye: ", type(y), "\n", x, "x is of type: ", type(x))
     if (canvas[y][x] != np.array([0, 0, 0])).any():
         return "In Obstacle Space"
     else: return "Not in obstacle space"
@@ -212,67 +214,79 @@ def findChildren(node, L, goalNode):
 
     return children
 
-def goalNodeReached(node, goalNode):
-    if node[3] == goalNode[3]:
+def goalNodeReached(node, goalNode, radius):
+    x, y, theta = node[3]
+    xG, yG, thetaG = goalNode[3]
+
+    distanceFromGoal = round(sqrt( (x - xG)**2 + (y - yG)**2 ), 2)
+    print("x, y, theta: ", x, y, theta, "\nxG, yG, thetaG: ", xG, yG, thetaG, "\ndistanceFromGoal: ", distanceFromGoal)
+    if distanceFromGoal <= 1.5 * radius:
         return True
     return False
 
-def aStar(startNode, goalNode):
-
+def aStar(startNode, goalNode, L):
+    print("aStar...")
     openList = []
     heappush(openList, startNode)
-    openListLocations = []
-    openListLocations.append(startNode[3])
+    # openListLocations = []
+    # openListLocations.append(startNode[3])
     closedList = []
     closedListLocations = []
-    locations = [startNode[3]]
+    # locations = [startNode[3]]
 
     currentNode = openList[0]
     i = 0
-    while openList and goalNodeReached(currentNode, goalNode) == False:
+    while openList and goalNodeReached(currentNode, goalNode) == False: # using currentNode bc its updated every iteration
+        print("iteration: ", i)
         i = i + 1
 
+        # pop first node from OpenList then place in closedList
         currentNode = heappop(openList)
-
         closedList.append(currentNode)
         closedListLocations.append(currentNode[3])
-        # print("***********************************************")
-        # print("time thru open List: ", i, "\nCurrent Node from openList = ", currentNode, "\nopenList: ", openList, "\nclosedList: ", closedList) # currentLocation from openListLocations: ", currentLocation, \
-        # print("***********************************************")
+        print("***********************************************")
+        print("time thru open List: ", i, "\nCurrent Node from openList = ", currentNode, "\nopenList: ", openList, "\nclosedList: ", closedList) # currentLocation from openListLocations: ", currentLocation, \
+        print("***********************************************")
 
         if goalNodeReached(currentNode, goalNode) == True:
-                # insert backtrack function
                 path = back_track(currentNode, closedList)
                 generateVideo(path, canvas, openList, closedList)
 
                 return
         else:
             index = 0
-            for c in findChildren(currentNode):
-                if c[3] not in closedListLocations and checkObstacleSpace(c) == "Not in obstacle space":
+            for c in findChildren(currentNode, L, goalNode): # from the pseudocode, this is forall u in U(x)
+                if c[3] not in closedListLocations and checkObstacleSpace(c) == "Not in obstacle space": # if the current child is not in closedListLocations and not in the obstacle space
                     num = 0
 
                     for node in openList:
                         if node[3] == c[3]:
                             num = num + 1 # check through all locations in openList, if the location is present increment num
-                            node1_index = openList.index(node) # if the node location = this child location, get its index
+                            node1_index = openList.index(node) # if this child is in the openList, get its index for comparison later
+                            print("c: ", c, "is in openList at: ", node1_index)
 
                     if num == 0: # aka if the child location is not in the openList:
                         # print("currentNode: ", currentNode)
-                        childC2C = round(currentNode[0] + c[0], 1) # sum the popped node and add the child step cost
+                        childC2C = round(currentNode[0] + c[0], 1) # sum the popped node its child step cost
                         nodeIndex = len(openList) + len(closedList) # index of this child node is the sum of all elements in openList and closedList
+                        
                         # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
-                        childNode = (childC2C, nodeIndex, currentNode[1], c[3]) # construct the childNode tuple
+                        childNode = (childC2C, nodeIndex, currentNode[1], c[3], c[4], c[5]) # construct the childNode tuple
+                        print("childNode: ", childNode)
                         heappush(openList, childNode) # place appropriately into heap
 
                     else: # child is in openList, check if we need to update
-                        node1 = openList[node1_index] # gather the entire node from openList
+                        node1 = openList[node1_index] # gather the entire node from openList using node1_index from earlier to compare its C2C to the new C2C
                         newC2C = round(currentNode[0] + c[0], 1) # add the current childs cost to its parent to compare with node1 in openList
                         if  newC2C < node1[0]:
                             # nodeIndex = len(openList) + len(closedList) # node index = length of openList + closedList
-                            childNode = (newC2C, len(openList) + len(closedList), currentNode[1], c[3]) # if the child has not been checked OR we found a lower childC2C, assign it the currentNode as the parent
-                            openList[node1_index] = childNode
+                            childNode = (newC2C, len(openList) + len(closedList), currentNode[1], c[3], c[4], c[5]) # if the child has not been checked OR we found a lower childC2C, assign it the currentNode as the parent
+                            openList[node1_index] = childNode 
             index = index + 1
+
+            if i == 2:
+                print("breaking")
+                break
 
     return "FAILURE"
 
@@ -378,8 +392,9 @@ def generateVideo(path, canvas, openList, ClosedList):
 # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
 startNode = (0, 0, None, (10, 10, 0), 0, 0)
 L = 10
+r = 5
 goalNode = (0, 0, None, (110, 110, 0), 0, 0)
-print("node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost)")
+# print("node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost)")
 print("startNode: ", startNode)
 # moveDown60Degrees(startNode, L, goalNode)
 # moveDown30Degrees(startNode, L, goalNode)
@@ -388,7 +403,9 @@ print("startNode: ", startNode)
 # moveUp60Degrees(startNode, L, goalNode)
 # print(checkObstacleSpace(startNode))
 # print(findChildren(startNode, L, goalNode))
-# print(goalNodeReached(startNode, goalNode))
+print(goalNodeReached(startNode, goalNode, r))
+
+# result = aStar(startNode, goalNode, L)
 
 # startNode = (0, 0, None, (7, 7))
 # print("Node format: (C2C, Node index, parent index, (x,y)) \nstartNode: ", startNode)
