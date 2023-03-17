@@ -215,16 +215,18 @@ def findChildren(node, L, goalNode):
     return children
 
 def goalNodeReached(node, goalNode, radius):
-    x, y, theta = node[3]
-    xG, yG, thetaG = goalNode[3]
+    x = node[3][0]
+    y = node[3][1]
+    xG = goalNode[3][0]
+    yG = goalNode[3][1]
 
     distanceFromGoal = round(sqrt( (x - xG)**2 + (y - yG)**2 ), 2)
-    print("x, y, theta: ", x, y, theta, "\nxG, yG, thetaG: ", xG, yG, thetaG, "\ndistanceFromGoal: ", distanceFromGoal)
+    # print("x, y, theta: ", x, y, theta, "\nxG, yG, thetaG: ", xG, yG, thetaG, "\ndistanceFromGoal: ", distanceFromGoal)
     if distanceFromGoal <= 1.5 * radius:
         return True
     return False
 
-def aStar(startNode, goalNode, L):
+def aStar(startNode, goalNode, L, r):
     print("aStar...")
     openList = []
     heappush(openList, startNode)
@@ -236,19 +238,20 @@ def aStar(startNode, goalNode, L):
 
     currentNode = openList[0]
     i = 0
-    while openList and goalNodeReached(currentNode, goalNode) == False: # using currentNode bc its updated every iteration
-        print("iteration: ", i)
+    while openList and goalNodeReached(currentNode, goalNode, r) == False: # using currentNode bc its updated every iteration
+        # print("iteration: ", i)
         i = i + 1
 
         # pop first node from OpenList then place in closedList
         currentNode = heappop(openList)
         closedList.append(currentNode)
-        closedListLocations.append(currentNode[3])
-        print("***********************************************")
-        print("time thru open List: ", i, "\nCurrent Node from openList = ", currentNode, "\nopenList: ", openList, "\nclosedList: ", closedList) # currentLocation from openListLocations: ", currentLocation, \
-        print("***********************************************")
+        closedListLocations.append(currentNode[3][0:2]) # closedList is made of tuples with a lot of info and idk how to ONLY check thru locations closedList so i made a list of ONLY the locations
+        print("\n***********************************************")
+        print("iteration: ", i, "\nCurrent Node from openList = ", currentNode, "\nopenList: ", openList, "\nclosedList: ", closedList) # currentLocation from openListLocations: ", currentLocation, \
+        print("closedListLocations: ", closedListLocations)
+        print("***********************************************\n")
 
-        if goalNodeReached(currentNode, goalNode) == True:
+        if goalNodeReached(currentNode, goalNode, r) == True:
                 path = back_track(currentNode, closedList)
                 generateVideo(path, canvas, openList, closedList)
 
@@ -267,12 +270,12 @@ def aStar(startNode, goalNode, L):
 
                     if num == 0: # aka if the child location is not in the openList:
                         # print("currentNode: ", currentNode)
-                        childC2C = round(currentNode[0] + c[0], 1) # sum the popped node its child step cost
+                        childC2C = round(currentNode[0] + c[0], 2) # sum the popped node its child step cost
                         nodeIndex = len(openList) + len(closedList) # index of this child node is the sum of all elements in openList and closedList
                         
                         # node = (C2C, node index, parent node index, (x, y, theta), C2G, totalCost) .. type is tuple
                         childNode = (childC2C, nodeIndex, currentNode[1], c[3], c[4], c[5]) # construct the childNode tuple
-                        print("childNode: ", childNode)
+                        print("c: ", c, "is not in openList!\nPlacing childNode: ", childNode, "in OpenList")
                         heappush(openList, childNode) # place appropriately into heap
 
                     else: # child is in openList, check if we need to update
@@ -285,7 +288,7 @@ def aStar(startNode, goalNode, L):
             index = index + 1
 
             if i == 2:
-                print("breaking")
+                print("breaking at i: ", i)
                 break
 
     return "FAILURE"
@@ -403,17 +406,10 @@ print("startNode: ", startNode)
 # moveUp60Degrees(startNode, L, goalNode)
 # print(checkObstacleSpace(startNode))
 # print(findChildren(startNode, L, goalNode))
-print(goalNodeReached(startNode, goalNode, r))
+# print(goalNodeReached(startNode, goalNode, r))
 
-# result = aStar(startNode, goalNode, L)
+result = aStar(startNode, goalNode, L, r)
 
-# startNode = (0, 0, None, (7, 7))
-# print("Node format: (C2C, Node index, parent index, (x,y)) \nstartNode: ", startNode)
-# # goalNode = (0, 0, None, (10, 30))
-# goalNode = (0, 0, None, (170, 125))
-# # goalNode = (0, 0, None, (520, 125))
-
-# result = aStar(startNode, goalNode)
 
 endTime = time.time()
 print("\nrun time = ", endTime - startTime, "seconds")
